@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "XxXXzMUEcunpslntt7d1n"
+uri = "file://artifacts/mobile/assets/images/icon.png"
+type = "image"
+title = "cycle tracker app icon"
