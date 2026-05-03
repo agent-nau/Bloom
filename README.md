@@ -3,7 +3,7 @@
 <div align="center">
 
 [![License: GPL 3.0](https://img.shields.io/badge/License-GPL_3.0-green.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
-[![Platform: Android/iOS](https://img.shields.io/badge/Platform-Android-green.svg)](https://www.android.com/)
+[![Platform: Android|iOS](https://img.shields.io/badge/Platform-Android-green.svg)](https://www.android.com/)
 [![Privacy](https://img.shields.io/badge/Privacy-First-green.svg)](#privacy)
 
 *A simple, beautiful app for tracking your menstrual cycle and understanding your body's natural rhythms.*
