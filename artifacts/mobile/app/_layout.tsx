@@ -9,6 +9,7 @@ import { Feather } from "@expo/vector-icons";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { router, Tabs } from "expo-router";
 import { SymbolView } from "expo-symbols";
+import { isLiquidGlassAvailable } from "expo-glass-effect";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef } from "react";
@@ -18,8 +19,6 @@ import {
   StyleSheet,
   Text,
   View,
-  useCallback,
-  useMemo,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
