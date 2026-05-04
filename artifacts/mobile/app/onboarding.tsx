@@ -88,7 +88,7 @@ export default function OnboardingScreen() {
     setIsSubmitting(true);
     try {
       await completeOnboarding({ firstName: trimmed });
-      router.replace("/(app)");
+      router.replace("/");
     } catch {
       Alert.alert("Error", "Something went wrong. Please try again.");
     } finally {
