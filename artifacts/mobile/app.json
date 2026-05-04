@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Cycle Tracker",
+    "name": "Bloom",
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,7 +16,17 @@
     "ios": {
       "supportsTablet": false
     },
-    "android": {},
+    "android": {
+      "package": "com.bloom.app",
+      "versionCode": 1,
+      "compileSdkVersion": 34,
+      "targetSdkVersion": 34,
+      "buildToolsVersion": "34.0.0",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#FBF7F4"
+      }
+    },
     "web": {
       "favicon": "./assets/images/icon.png"
     },
