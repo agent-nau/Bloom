@@ -39,24 +39,22 @@ export default function ProfileTabScreen() {
 
   const handleClearData = () => {
     Alert.alert(
-      "Clear All Data",
-      "This will permanently delete all your cycle data, logs, and profile information. This action cannot be undone. Are you sure?",
+      "Delete Period History",
+      "This will permanently delete all your cycle data, period logs, symptoms, and mood entries. Your profile and settings will be kept. This action cannot be undone.",
       [
         {
           text: "Cancel",
           style: "cancel",
         },
         {
-          text: "Clear Data",
+          text: "Delete History",
           style: "destructive",
           onPress: async () => {
             try {
               await clearAllData();
-              await clearUserData();
-              Alert.alert("Success", "All data has been cleared. The app will now restart.");
-              // In a real app, you might want to restart the app or navigate to onboarding
+              Alert.alert("Done", "All period history has been deleted.");
             } catch (error) {
-              Alert.alert("Error", "Failed to clear data. Please try again.");
+              Alert.alert("Error", "Failed to delete data. Please try again.");
             }
           },
         },
@@ -249,14 +247,14 @@ export default function ProfileTabScreen() {
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
               <Feather name="trash-2" size={18} color="#FF3B30" />
               <Text style={{ fontSize: 16, color: "#FF3B30", fontWeight: "600" }}>
-                Clear All Data
+                Delete Period History
               </Text>
             </View>
             <Feather name="chevron-right" size={16} color="#FF3B30" />
           </TouchableOpacity>
           
           <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 8, fontStyle: "italic" }}>
-            This will permanently delete all your cycles, logs, and profile data
+            Permanently deletes all cycles, logs, symptoms and moods. Profile is kept.
           </Text>
         </View>
 

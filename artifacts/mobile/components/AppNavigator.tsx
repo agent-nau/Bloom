@@ -24,14 +24,14 @@ export function AppNavigator() {
   if (!profile || !profile.hasCompletedOnboarding) {
     SplashScreen.hideAsync();
     return (
-      <Stack screenOptions={{ headerBackTitle: "Back" }}>
+      <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       </Stack>
     );
   }
 
   return (
-    <Stack screenOptions={{ headerBackTitle: "Back" }}>
+    <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     </Stack>
   );

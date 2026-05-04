@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { useColorScheme } from "react-native";
+import { Appearance, Platform } from "react-native";
 
 type ThemeMode = "light" | "dark";
 
@@ -14,6 +14,12 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const THEME_STORAGE_KEY = "theme_mode";
 
+function applyColorScheme(mode: ThemeMode) {
+  if (Platform.OS !== "web") {
+    Appearance.setColorScheme(mode);
+  }
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [themeMode, setThemeModeState] = useState<ThemeMode>("light");
   const [loaded, setLoaded] = useState(false);
@@ -24,6 +30,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
         if (savedTheme && (savedTheme === "light" || savedTheme === "dark")) {
           setThemeModeState(savedTheme as ThemeMode);
+          applyColorScheme(savedTheme as ThemeMode);
         }
       } catch (error) {
         console.error("Failed to load theme preference:", error);
@@ -37,6 +44,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (loaded) {
       AsyncStorage.setItem(THEME_STORAGE_KEY, themeMode);
+      applyColorScheme(themeMode);
     }
   }, [themeMode, loaded]);
 
@@ -44,16 +52,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const setThemeMode = async (mode: ThemeMode) => {
     setThemeModeState(mode);
+    applyColorScheme(mode);
   };
 
   return (
-    <ThemeContext.Provider
-      value={{
-        themeMode,
-        isDark,
-        setThemeMode,
-      }}
-    >
+    <ThemeContext.Provider value={{ themeMode, isDark, setThemeMode }}>
       {children}
     </ThemeContext.Provider>
   );

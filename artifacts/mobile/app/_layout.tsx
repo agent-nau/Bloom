@@ -6,7 +6,6 @@ import {
   useFonts,
 } from "@expo-google-fonts/inter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -24,9 +23,7 @@ SplashScreen.preventAutoHideAsync();
 const queryClient = new QueryClient();
 
 function RootLayoutNav() {
-  return (
-    <AppNavigator />
-  );
+  return <AppNavigator />;
 }
 
 export default function RootLayout() {
@@ -47,8 +44,8 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <ErrorBoundary>
-        <ThemeProvider>
+      <ThemeProvider>
+        <ErrorBoundary>
           <UserProvider>
             <QueryClientProvider client={queryClient}>
               <GestureHandlerRootView>
@@ -60,8 +57,8 @@ export default function RootLayout() {
               </GestureHandlerRootView>
             </QueryClientProvider>
           </UserProvider>
-        </ThemeProvider>
-      </ErrorBoundary>
+        </ErrorBoundary>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }
