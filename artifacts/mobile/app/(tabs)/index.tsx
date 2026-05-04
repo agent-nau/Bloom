@@ -1,18 +1,14 @@
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import React from "react";
+import React, { useState } from "react";
 import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Greeting } from "@/components/Greeting";
+import { DateDropdown } from "@/components/DateDropdown";
+import { PeriodDatePicker } from "@/components/PeriodDatePicker";
 import { useCycle } from "@/context/CycleContext";
 import { useColors } from "@/hooks/useColors";
-
-function getGreeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  return "Good evening";
-}
 
 function shortDate(dateStr: string | null): string {
   if (!dateStr) return "—";
@@ -23,6 +19,8 @@ function shortDate(dateStr: string | null): string {
 export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showChangeDateDropdown, setShowChangeDateDropdown] = useState(false);
   const {
     currentCycleDay,
     phaseName,
@@ -38,7 +36,10 @@ export default function HomeScreen() {
     cycles,
     averageCycleLength,
     averagePeriodLength,
+    lastCycle,
     startPeriod,
+    startPeriodOnDate,
+    updatePeriodStartDate,
     endPeriod,
     todayLog,
     todayStr,
@@ -77,203 +78,254 @@ export default function HomeScreen() {
     await endPeriod();
   };
 
+  const handleStartPeriodToday = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await startPeriod();
+  };
+
+  const handleStartPeriodOnDate = async (dateStr: string) => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await startPeriodOnDate(dateStr);
+  };
+
+  const handleChangePeriodDate = async (newDateStr: string) => {
+    if (lastCycle) {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      await updatePeriodStartDate(lastCycle.startDate, newDateStr);
+    }
+  };
+
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={[
-        styles.content,
-        { paddingTop: topPad + 16, paddingBottom: bottomPad + 110 },
-      ]}
-      showsVerticalScrollIndicator={false}
-    >
-      <Text style={[styles.greeting, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-        {getGreeting()}
-      </Text>
-      <Text style={[styles.title, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-        My Cycle
-      </Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: topPad + 16, paddingBottom: bottomPad + 110 },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <Greeting />
+        <Text style={[styles.title, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+          My Cycle
+        </Text>
 
-      {/* Phase card */}
-      <View style={[styles.phaseCard, { backgroundColor: phaseColor }]}>
-        {hasTracking ? (
-          <View style={styles.phaseInner}>
-            <Text style={[styles.dayLabel, { color: phaseTextColor, fontFamily: "Inter_400Regular" }]}>
-              Cycle Day
-            </Text>
-            <Text style={[styles.dayNumber, { color: phaseTextColor, fontFamily: "Inter_700Bold" }]}>
-              {currentCycleDay}
-            </Text>
-            <Text style={[styles.phaseName, { color: phaseTextColor, fontFamily: "Inter_600SemiBold" }]}>
-              {phaseName}
-            </Text>
-            <View style={[styles.progressTrack, { backgroundColor: "rgba(255,255,255,0.25)" }]}>
-              <View
-                style={[
-                  styles.progressFill,
-                  { width: `${progressPct}%` as any, backgroundColor: progressFillColor },
-                ]}
-              />
-            </View>
-            <Text style={[styles.phaseDesc, { color: phaseTextColor, fontFamily: "Inter_400Regular" }]}>
-              {phaseDescription}
-            </Text>
-          </View>
-        ) : (
-          <View style={[styles.phaseInner, styles.noTrackingInner]}>
-            <Feather name="moon" size={44} color={colors.mutedForeground} />
-            <Text style={[styles.noTrackingText, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
-              Start tracking
-            </Text>
-            <Text style={[styles.noTrackingDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-              Log your first period to begin
-            </Text>
-          </View>
-        )}
-      </View>
-
-      {/* Period action */}
-      {!isInPeriod ? (
-        <TouchableOpacity
-          style={[styles.actionBtn, { backgroundColor: colors.primary }]}
-          onPress={handleStartPeriod}
-          activeOpacity={0.82}
-        >
-          <Feather name="droplet" size={18} color={colors.primaryForeground} />
-          <Text style={[styles.actionBtnText, { color: colors.primaryForeground, fontFamily: "Inter_600SemiBold" }]}>
-            Period Started Today
-          </Text>
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity
-          style={[styles.actionBtn, { backgroundColor: colors.secondary, borderWidth: 1, borderColor: colors.border }]}
-          onPress={handleEndPeriod}
-          activeOpacity={0.82}
-        >
-          <Feather name="check-circle" size={18} color={colors.primary} />
-          <Text style={[styles.actionBtnText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
-            Period Ended Today
-          </Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Info grid */}
-      {hasTracking && (
-        <>
-          <View style={styles.infoGrid}>
-            <InfoCard
-              icon="calendar"
-              iconBg={colors.secondary}
-              iconColor={colors.primary}
-              label="Next Period"
-              value={
-                daysUntilNextPeriod !== null && daysUntilNextPeriod > 0
-                  ? `${daysUntilNextPeriod}d`
-                  : daysUntilNextPeriod === 0
-                  ? "Today"
-                  : "Due"
-              }
-              sub={shortDate(nextPeriodDate)}
-              colors={colors}
-            />
-            <InfoCard
-              icon="sun"
-              iconBg="#E5F3EF"
-              iconColor={colors.accent}
-              label="Fertile Window"
-              value={isFertile ? "Now" : fertileStart ? shortDate(fertileStart) : "—"}
-              sub={
-                fertileStart && fertileEnd
-                  ? `${shortDate(fertileStart)} – ${shortDate(fertileEnd)}`
-                  : "—"
-              }
-              colors={colors}
-            />
-            <InfoCard
-              icon="activity"
-              iconBg={colors.secondary}
-              iconColor={colors.primary}
-              label="Cycle Length"
-              value={`${averageCycleLength}d`}
-              sub="average"
-              colors={colors}
-            />
-            <InfoCard
-              icon="heart"
-              iconBg="#E5F3EF"
-              iconColor={colors.accent}
-              label="Period Length"
-              value={`${averagePeriodLength}d`}
-              sub="average"
-              colors={colors}
-            />
-          </View>
-
-          {/* Ovulation */}
-          {ovulationDate && (
-            <View
-              style={[
-                styles.ovulationBanner,
-                {
-                  backgroundColor:
-                    todayStr === ovulationDate ? colors.accent : colors.card,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Feather
-                name="sun"
-                size={16}
-                color={todayStr === ovulationDate ? colors.accentForeground : colors.accent}
-              />
-              <Text
-                style={[
-                  styles.ovulationText,
-                  {
-                    color:
-                      todayStr === ovulationDate
-                        ? colors.accentForeground
-                        : colors.foreground,
-                    fontFamily: "Inter_500Medium",
-                  },
-                ]}
-              >
-                {todayStr === ovulationDate
-                  ? "Ovulation day — peak fertility"
-                  : `Predicted ovulation: ${shortDate(ovulationDate)}`}
+        {/* Phase card */}
+        <View style={[styles.phaseCard, { backgroundColor: phaseColor }]}>
+          {hasTracking ? (
+            <View style={styles.phaseInner}>
+              <Text style={[styles.dayLabel, { color: phaseTextColor, fontFamily: "Inter_400Regular" }]}>
+                Cycle Day
+              </Text>
+              <Text style={[styles.dayNumber, { color: phaseTextColor, fontFamily: "Inter_700Bold" }]}>
+                {currentCycleDay}
+              </Text>
+              <Text style={[styles.phaseName, { color: phaseTextColor, fontFamily: "Inter_600SemiBold" }]}>
+                {phaseName}
+              </Text>
+              <View style={[styles.progressTrack, { backgroundColor: "rgba(255,255,255,0.25)" }]}>
+                <View
+                  style={[
+                    styles.progressFill,
+                    { width: `${progressPct}%` as any, backgroundColor: progressFillColor },
+                  ]}
+                />
+              </View>
+              <Text style={[styles.phaseDesc, { color: phaseTextColor, fontFamily: "Inter_400Regular" }]}>
+                {phaseDescription}
               </Text>
             </View>
-          )}
-        </>
-      )}
-
-      {/* Today's log summary */}
-      {todayLog && (todayLog.symptoms.length > 0 || todayLog.mood) && (
-        <View style={[styles.logSummary, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[styles.logSummaryTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
-            Today&apos;s Log
-          </Text>
-          {todayLog.mood && (
-            <View style={styles.logRow}>
-              <Feather name="smile" size={14} color={colors.mutedForeground} />
-              <Text style={[styles.logRowText, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                Feeling {todayLog.mood.toLowerCase()}
+          ) : (
+            <View style={[styles.phaseInner, styles.noTrackingInner]}>
+              <Feather name="moon" size={44} color={colors.mutedForeground} />
+              <Text style={[styles.noTrackingText, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
+                Start tracking
               </Text>
-            </View>
-          )}
-          {todayLog.symptoms.length > 0 && (
-            <View style={styles.logRow}>
-              <Feather name="list" size={14} color={colors.mutedForeground} />
-              <Text style={[styles.logRowText, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                {todayLog.symptoms.join(", ")}
+              <Text style={[styles.noTrackingDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                Log your first period to begin
               </Text>
             </View>
           )}
         </View>
-      )}
-    </ScrollView>
+
+        {/* Period action */}
+        {!isInPeriod ? (
+          <View style={styles.periodActionContainer}>
+            <TouchableOpacity
+              style={[styles.actionBtn, { backgroundColor: colors.primary, flex: 1 }]}
+              onPress={handleStartPeriodToday}
+              activeOpacity={0.82}
+            >
+              <Feather name="droplet" size={18} color={colors.primaryForeground} />
+              <Text style={[styles.actionBtnText, { color: colors.primaryForeground, fontFamily: "Inter_600SemiBold" }]}>
+                Started Today
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionBtn, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, flex: 1 }]}
+              onPress={() => setShowDatePicker(true)}
+              activeOpacity={0.82}
+            >
+              <Feather name="calendar" size={18} color={colors.primary} />
+              <Text style={[styles.actionBtnText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                Select Date
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.periodActionContainer}>
+            <TouchableOpacity
+              style={[styles.actionBtn, { backgroundColor: colors.secondary, borderWidth: 1, borderColor: colors.border, flex: 1 }]}
+              onPress={handleEndPeriod}
+              activeOpacity={0.82}
+            >
+              <Feather name="check-circle" size={18} color={colors.primary} />
+              <Text style={[styles.actionBtnText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                Ended Today
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionBtn, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, flex: 1 }]}
+              onPress={() => setShowChangeDateDropdown(true)}
+              activeOpacity={0.82}
+            >
+              <Feather name="edit-2" size={18} color={colors.primary} />
+              <Text style={[styles.actionBtnText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                Change Date
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Info grid */}
+        {hasTracking && (
+          <>
+            <View style={styles.infoGrid}>
+              <InfoCard
+                icon="calendar"
+                iconBg={colors.secondary}
+                iconColor={colors.primary}
+                label="Next Period"
+                value={
+                  daysUntilNextPeriod !== null && daysUntilNextPeriod > 0
+                    ? `${daysUntilNextPeriod}d`
+                    : daysUntilNextPeriod === 0
+                    ? "Today"
+                    : "Due"
+                }
+                sub={shortDate(nextPeriodDate)}
+                colors={colors}
+              />
+              <InfoCard
+                icon="sun"
+                iconBg={colors.secondary}
+                iconColor={colors.accent}
+                label="Fertile Window"
+                value={isFertile ? "Now" : fertileStart ? shortDate(fertileStart) : "—"}
+                sub={
+                  fertileStart && fertileEnd
+                    ? `${shortDate(fertileStart)} – ${shortDate(fertileEnd)}`
+                    : "—"
+                }
+                colors={colors}
+              />
+              <InfoCard
+                icon="activity"
+                iconBg={colors.secondary}
+                iconColor={colors.primary}
+                label="Cycle Length"
+                value={`${averageCycleLength}d`}
+                sub="average"
+                colors={colors}
+              />
+              <InfoCard
+                icon="heart"
+                iconBg={colors.secondary}
+                iconColor={colors.accent}
+                label="Period Length"
+                value={`${averagePeriodLength}d`}
+                sub="average"
+                colors={colors}
+              />
+            </View>
+
+            {/* Ovulation */}
+            {ovulationDate && (
+              <View
+                style={[
+                  styles.ovulationBanner,
+                  {
+                    backgroundColor:
+                      todayStr === ovulationDate ? colors.accent : colors.card,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <Feather
+                  name="sun"
+                  size={16}
+                  color={todayStr === ovulationDate ? colors.accentForeground : colors.accent}
+                />
+                <Text
+                  style={[
+                    styles.ovulationText,
+                    {
+                      color:
+                        todayStr === ovulationDate
+                          ? colors.accentForeground
+                          : colors.foreground,
+                      fontFamily: "Inter_500Medium",
+                    },
+                  ]}
+                >
+                  {todayStr === ovulationDate
+                    ? "Ovulation day — peak fertility"
+                    : `Predicted ovulation: ${shortDate(ovulationDate)}`}
+                </Text>
+              </View>
+            )}
+          </>
+        )}
+
+        {/* Today's log summary */}
+        {todayLog && (todayLog.symptoms.length > 0 || todayLog.mood) && (
+          <View style={[styles.logSummary, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.logSummaryTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+              Today&apos;s Log
+            </Text>
+            {todayLog.mood && (
+              <View style={styles.logRow}>
+                <Feather name="smile" size={14} color={colors.mutedForeground} />
+                <Text style={[styles.logRowText, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                  Feeling {todayLog.mood.toLowerCase()}
+                </Text>
+              </View>
+            )}
+            {todayLog.symptoms.length > 0 && (
+              <View style={styles.logRow}>
+                <Feather name="list" size={14} color={colors.mutedForeground} />
+                <Text style={[styles.logRowText, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                  {todayLog.symptoms.join(", ")}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+      </ScrollView>
+      <PeriodDatePicker
+        visible={showDatePicker}
+        onClose={() => setShowDatePicker(false)}
+        onDateSelect={handleStartPeriodOnDate}
+      />
+      <DateDropdown
+        visible={showChangeDateDropdown}
+        onClose={() => setShowChangeDateDropdown(false)}
+        onDateSelect={handleChangePeriodDate}
+        currentStartDate={lastCycle?.startDate}
+      />
+    </View>
   );
 }
 
@@ -344,6 +396,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   actionBtnText: { fontSize: 15 },
+  periodActionContainer: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 20,
+  },
   infoGrid: {
     flexDirection: "row",
     flexWrap: "wrap",

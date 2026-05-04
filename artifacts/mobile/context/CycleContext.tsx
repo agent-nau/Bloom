@@ -52,9 +52,12 @@ interface CycleContextType {
   averagePeriodLength: number;
   lastCycle: Cycle | null;
   startPeriod: () => Promise<void>;
+  startPeriodOnDate: (dateStr: string) => Promise<void>;
+  updatePeriodStartDate: (oldStartDate: string, newStartDate: string) => Promise<void>;
   endPeriod: () => Promise<void>;
   saveDayLog: (log: Partial<DayLog> & { date?: string }) => Promise<void>;
   updateSettings: (s: Partial<CycleSettings>) => Promise<void>;
+  clearAllData: () => Promise<void>;
   getDateStatus: (dateStr: string) => DateStatus;
 }
 
@@ -280,6 +283,25 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
     });
   }, [sortedCycles, todayStr]);
 
+  const startPeriodOnDate = useCallback(async (dateStr: string) => {
+    const alreadyStarted = sortedCycles.some((c) => c.startDate === dateStr);
+    if (alreadyStarted) return;
+    const newCycle: Cycle = {
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 6),
+      startDate: dateStr,
+    };
+    setCycles((prev) => [...prev, newCycle]);
+    setLogs((prev) => {
+      const idx = prev.findIndex((l) => l.date === dateStr);
+      if (idx >= 0) {
+        const updated = [...prev];
+        updated[idx] = { ...updated[idx], flow: updated[idx].flow ?? "medium" };
+        return updated;
+      }
+      return [...prev, { date: dateStr, symptoms: [], flow: "medium" }];
+    });
+  }, [sortedCycles]);
+
   const endPeriod = useCallback(async () => {
     if (!lastCycle) return;
     setCycles((prev) => {
@@ -307,36 +329,72 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
     setSettings((prev) => ({ ...prev, ...s }));
   }, []);
 
+  const updatePeriodStartDate = useCallback(async (oldStartDate: string, newStartDate: string) => {
+    setCycles((prev) => {
+      const updated = [...prev];
+      const cycleIndex = updated.findIndex((c) => c.startDate === oldStartDate);
+      if (cycleIndex >= 0) {
+        updated[cycleIndex] = { ...updated[cycleIndex], startDate: newStartDate };
+      }
+      return updated;
+    });
+    
+    // Update any logs associated with the old date
+    setLogs((prev) => {
+      const updated = [...prev];
+      const logIndex = updated.findIndex((l) => l.date === oldStartDate);
+      if (logIndex >= 0) {
+        updated[logIndex] = { ...updated[logIndex], date: newStartDate };
+      }
+      return updated;
+    });
+  }, []);
+
+  const clearAllData = useCallback(async () => {
+    // Clear all cycle data
+    setCycles([]);
+    setLogs([]);
+    setSettings(defaultSettings);
+    
+    // Clear AsyncStorage
+    await AsyncStorage.removeItem("cycles");
+    await AsyncStorage.removeItem("logs");
+    await AsyncStorage.removeItem("settings");
+  }, []);
+
+  const value: CycleContextType = {
+    cycles,
+    logs,
+    settings,
+    loaded,
+    todayStr,
+    currentCycleDay,
+    phase,
+    phaseName,
+    phaseDescription,
+    nextPeriodDate,
+    daysUntilNextPeriod,
+    fertileStart,
+    fertileEnd,
+    ovulationDate,
+    isInPeriod,
+    isFertile,
+    todayLog,
+    averageCycleLength,
+    averagePeriodLength,
+    lastCycle,
+    startPeriod,
+    startPeriodOnDate,
+    updatePeriodStartDate,
+    endPeriod,
+    saveDayLog,
+    updateSettings,
+    clearAllData,
+    getDateStatus,
+  };
+
   return (
-    <CycleContext.Provider
-      value={{
-        cycles: sortedCycles,
-        logs,
-        settings,
-        loaded,
-        todayStr,
-        currentCycleDay,
-        phase,
-        phaseName,
-        phaseDescription,
-        nextPeriodDate,
-        daysUntilNextPeriod,
-        fertileStart,
-        fertileEnd,
-        ovulationDate,
-        isInPeriod,
-        isFertile,
-        todayLog,
-        averageCycleLength,
-        averagePeriodLength,
-        lastCycle,
-        startPeriod,
-        endPeriod,
-        saveDayLog,
-        updateSettings,
-        getDateStatus,
-      }}
-    >
+    <CycleContext.Provider value={value}>
       {children}
     </CycleContext.Provider>
   );
