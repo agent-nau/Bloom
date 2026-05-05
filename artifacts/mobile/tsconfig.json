@@ -1,8 +1,12 @@
 {
-  "extends": "expo/tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
     "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "jsx": "react-jsx",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
     "paths": {
       "@/*": [
         "./*"
@@ -19,5 +23,6 @@
     {
       "path": "../../lib/api-client-react"
     }
-  ]
+  ],
+  "extends": "expo/tsconfig.base"
 }
