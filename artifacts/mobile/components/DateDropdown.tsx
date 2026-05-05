@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, View, ScrollView } from "react-native";
+import React from "react";
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
 
@@ -10,100 +10,94 @@ interface DateDropdownProps {
   currentStartDate?: string;
 }
 
+function getRecentDates() {
+  const dates = [];
+  const today = new Date();
+  for (let i = 0; i <= 60; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+    const dateStr = date.toISOString().split("T")[0];
+    const label = date.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+    const isToday = i === 0;
+    dates.push({ value: dateStr, label, isToday });
+  }
+  return dates;
+}
+
+const dates = getRecentDates();
+
 export function DateDropdown({ visible, onClose, onDateSelect, currentStartDate }: DateDropdownProps) {
   const colors = useColors();
-  const [selectedDate, setSelectedDate] = useState(currentStartDate || "");
-  const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
-  const getRecentDates = () => {
-    const dates = [];
-    const today = new Date();
-    
-    // Add dates from today back to 60 days ago for more options
-    for (let i = 0; i <= 60; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      const monthName = date.toLocaleDateString('en-US', { month: 'short' });
-      const dayNumber = date.getDate();
-      const label = `${monthName} ${dayNumber}`;
-      dates.push({ value: dateStr, label });
-    }
-    
-    return dates;
-  };
-
-  const handleSelect = (date: string) => {
-    setSelectedDate(date);
-    onDateSelect(date);
+  const handleSelect = (value: string) => {
+    onDateSelect(value);
     onClose();
   };
-
-  const dates = getRecentDates();
 
   return (
     <Modal
       visible={visible}
-      transparent={true}
-      animationType="fade"
+      transparent
+      animationType="slide"
       onRequestClose={onClose}
     >
       <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={[styles.container, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={(e) => e.stopPropagation()}>
+        <Pressable
+          style={[styles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}
+          onPress={(e) => e.stopPropagation()}
+        >
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
             <Text style={[styles.title, { color: colors.foreground }]}>
               Change Period Start Date
             </Text>
-            <TouchableOpacity onPress={onClose}>
-              <Feather name="x" size={24} color={colors.foreground} />
+            <TouchableOpacity onPress={onClose} hitSlop={8}>
+              <Feather name="x" size={22} color={colors.foreground} />
             </TouchableOpacity>
           </View>
-          
-          <View style={styles.dateListContainer}>
-            <ScrollView 
-              horizontal={true}
-              showsHorizontalScrollIndicator={true}
-              style={styles.horizontalScrollView}
-              contentContainerStyle={styles.horizontalContent}
-            >
-              {dates.map((date) => (
+
+          <ScrollView
+            style={styles.list}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {dates.map((date, index) => {
+              const isSelected = currentStartDate === date.value;
+              return (
                 <TouchableOpacity
                   key={date.value}
                   style={[
-                    styles.dateBox,
-                    { 
-                      backgroundColor: currentStartDate === date.value ? colors.primary + "20" : colors.background,
-                      borderColor: currentStartDate === date.value ? colors.primary : colors.border,
-                      borderWidth: 2,
-                      shadowColor: colors.border,
-                    }
+                    styles.row,
+                    {
+                      backgroundColor: isSelected ? colors.primary + "18" : "transparent",
+                      borderBottomColor: colors.border,
+                      borderBottomWidth: index < dates.length - 1 ? StyleSheet.hairlineWidth : 0,
+                    },
                   ]}
                   onPress={() => handleSelect(date.value)}
+                  activeOpacity={0.7}
                 >
-                  <View style={styles.dateContent}>
-                    <Text 
-                      style={[
-                        styles.dateLabel,
-                        { 
-                          color: currentStartDate === date.value ? colors.primary : colors.foreground,
-                          fontWeight: currentStartDate === date.value ? '600' : '500'
-                        }
-                      ]}
-                      numberOfLines={1}
-                      adjustsFontSizeToFit={true}
-                    >
+                  <View style={styles.rowLeft}>
+                    <Text style={[styles.rowLabel, { color: isSelected ? colors.primary : colors.foreground }]}>
                       {date.label}
                     </Text>
-                    {currentStartDate === date.value && (
-                      <View style={[styles.selectedIndicator, { backgroundColor: colors.primary }]}>
-                        <Feather name="check" size={10} color={colors.primaryForeground} />
+                    {date.isToday && (
+                      <View style={[styles.todayBadge, { backgroundColor: colors.primary + "22" }]}>
+                        <Text style={[styles.todayText, { color: colors.primary }]}>Today</Text>
                       </View>
                     )}
                   </View>
+                  {isSelected && (
+                    <Feather name="check" size={18} color={colors.primary} />
+                  )}
                 </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
+              );
+            })}
+          </ScrollView>
         </Pressable>
       </Pressable>
     </Modal>
@@ -113,78 +107,59 @@ export function DateDropdown({ visible, onClose, onDateSelect, currentStartDate 
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "flex-end",
   },
-  container: {
-    width: '90%',
-    maxWidth: 420,
-    height: 500,
-    borderRadius: 16,
+  sheet: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     borderWidth: 1,
-    elevation: 8,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    borderBottomWidth: 0,
+    maxHeight: "70%",
+    paddingBottom: 24,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 17,
+    fontWeight: "600",
   },
-  dateListContainer: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-  },
-  horizontalScrollView: {
+  list: {
     flex: 1,
   },
-  horizontalContent: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'center',
-  },
-  dateBox: {
-    width: 100,
-    height: 60,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 3,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-  },
-  dateContent: {
-    flex: 1,
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
+  listContent: {
     paddingHorizontal: 4,
   },
-  dateLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    textAlign: 'center',
-    paddingHorizontal: 4,
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 14,
   },
-  selectedIndicator: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    justifyContent: 'center',
-    alignItems: 'center',
+  rowLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  rowLabel: {
+    fontSize: 15,
+    fontWeight: "500",
+  },
+  todayBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  todayText: {
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 0.2,
   },
 });
