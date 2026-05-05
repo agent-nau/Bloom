@@ -5,7 +5,6 @@ import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Greeting } from "@/components/Greeting";
-import { DateDropdown } from "@/components/DateDropdown";
 import { PeriodDatePicker } from "@/components/PeriodDatePicker";
 import { useCycle } from "@/context/CycleContext";
 import { useColors } from "@/hooks/useColors";
@@ -20,7 +19,6 @@ export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showChangeDateDropdown, setShowChangeDateDropdown] = useState(false);
   const {
     currentCycleDay,
     phaseName,
@@ -152,51 +150,27 @@ export default function HomeScreen() {
 
         {/* Period action */}
         {!isInPeriod ? (
-          <View style={styles.periodActionContainer}>
-            <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: colors.primary, flex: 1 }]}
-              onPress={handleStartPeriodToday}
-              activeOpacity={0.82}
-            >
-              <Feather name="droplet" size={18} color={colors.primaryForeground} />
-              <Text style={[styles.actionBtnText, { color: colors.primaryForeground, fontFamily: "Inter_600SemiBold" }]}>
-                Started Today
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, flex: 1 }]}
-              onPress={() => setShowDatePicker(true)}
-              activeOpacity={0.82}
-            >
-              <Feather name="calendar" size={18} color={colors.primary} />
-              <Text style={[styles.actionBtnText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
-                Select Date
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={[styles.actionBtn, { backgroundColor: colors.primary }]}
+            onPress={() => setShowDatePicker(true)}
+            activeOpacity={0.82}
+          >
+            <Feather name="droplet" size={18} color={colors.primaryForeground} />
+            <Text style={[styles.actionBtnText, { color: colors.primaryForeground, fontFamily: "Inter_600SemiBold" }]}>
+              Select Start Date
+            </Text>
+          </TouchableOpacity>
         ) : (
-          <View style={styles.periodActionContainer}>
-            <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: colors.secondary, borderWidth: 1, borderColor: colors.border, flex: 1 }]}
-              onPress={handleEndPeriod}
-              activeOpacity={0.82}
-            >
-              <Feather name="check-circle" size={18} color={colors.primary} />
-              <Text style={[styles.actionBtnText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
-                Ended Today
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, flex: 1 }]}
-              onPress={() => setShowChangeDateDropdown(true)}
-              activeOpacity={0.82}
-            >
-              <Feather name="edit-2" size={18} color={colors.primary} />
-              <Text style={[styles.actionBtnText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
-                Change Date
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={[styles.actionBtn, { backgroundColor: colors.secondary, borderWidth: 1, borderColor: colors.border }]}
+            onPress={handleEndPeriod}
+            activeOpacity={0.82}
+          >
+            <Feather name="check-circle" size={18} color={colors.primary} />
+            <Text style={[styles.actionBtnText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+              Ended Today
+            </Text>
+          </TouchableOpacity>
         )}
 
         {/* Info grid */}
@@ -318,12 +292,6 @@ export default function HomeScreen() {
         visible={showDatePicker}
         onClose={() => setShowDatePicker(false)}
         onDateSelect={handleStartPeriodOnDate}
-      />
-      <DateDropdown
-        visible={showChangeDateDropdown}
-        onClose={() => setShowChangeDateDropdown(false)}
-        onDateSelect={handleChangePeriodDate}
-        currentStartDate={lastCycle?.startDate}
       />
     </View>
   );

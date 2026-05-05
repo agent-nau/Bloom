@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
 
 interface PeriodDatePickerProps {
@@ -8,28 +8,62 @@ interface PeriodDatePickerProps {
   onDateSelect: (date: string) => void;
 }
 
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
+function getAvailableMonths() {
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const prevDate = new Date(currentYear, currentMonth - 1, 1);
+  return [
+    { label: MONTH_NAMES[prevDate.getMonth()], month: prevDate.getMonth(), year: prevDate.getFullYear() },
+    { label: MONTH_NAMES[currentMonth], month: currentMonth, year: currentYear },
+  ];
+}
+
 export function PeriodDatePicker({ visible, onClose, onDateSelect }: PeriodDatePickerProps) {
   const colors = useColors();
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const availableMonths = getAvailableMonths();
+
+  const [selectedMonthIdx, setSelectedMonthIdx] = useState(1);
   const [selectedDay, setSelectedDay] = useState(new Date().getDate());
 
-  const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-  ];
+  const { month, year } = availableMonths[selectedMonthIdx];
 
-  const getDaysInMonth = (year: number, month: number) => {
-    return new Date(year, month + 1, 0).getDate();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+  const handleMonthSelect = (idx: number) => {
+    setSelectedMonthIdx(idx);
+    const newDays = new Date(availableMonths[idx].year, availableMonths[idx].month + 1, 0).getDate();
+    if (selectedDay > newDays) setSelectedDay(newDays);
   };
 
   const handleConfirm = () => {
-    const dateStr = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`;
+    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`;
     onDateSelect(dateStr);
     onClose();
   };
 
-  const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
+  const isToday = () => {
+    const today = new Date();
+    return (
+      selectedDay === today.getDate() &&
+      month === today.getMonth() &&
+      year === today.getFullYear()
+    );
+  };
+
+  const getButtonText = () => {
+    if (!selectedDay || !month || !year) {
+      return "Select Date";
+    }
+    return `Started ${MONTH_NAMES[month]} ${selectedDay}`;
+  };
 
   return (
     <Modal
@@ -43,35 +77,35 @@ export function PeriodDatePicker({ visible, onClose, onDateSelect }: PeriodDateP
           <Text style={[styles.title, { color: colors.foreground }]}>
             When did your period start?
           </Text>
-          
+
           <View style={styles.pickerContainer}>
-            <View style={styles.pickerColumn}>
+            <View style={[styles.pickerColumn, { flex: 2 }]}>
               <Text style={[styles.pickerLabel, { color: colors.mutedForeground }]}>Month</Text>
               <View style={styles.picker}>
-                {months.map((month, index) => (
+                {availableMonths.map((m, idx) => (
                   <TouchableOpacity
-                    key={month}
+                    key={idx}
                     style={[
                       styles.pickerItem,
-                      selectedMonth === index && { backgroundColor: colors.primary }
+                      selectedMonthIdx === idx && { backgroundColor: colors.primary }
                     ]}
-                    onPress={() => setSelectedMonth(index)}
+                    onPress={() => handleMonthSelect(idx)}
                   >
                     <Text style={[
                       styles.pickerText,
-                      { color: selectedMonth === index ? colors.primaryForeground : colors.foreground }
+                      { color: selectedMonthIdx === idx ? colors.primaryForeground : colors.foreground }
                     ]}>
-                      {month}
+                      {m.label}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
             </View>
 
-            <View style={styles.pickerColumn}>
+            <View style={[styles.pickerColumn, { flex: 1 }]}>
               <Text style={[styles.pickerLabel, { color: colors.mutedForeground }]}>Day</Text>
-              <View style={styles.picker}>
-                {Array.from({ length: getDaysInMonth(selectedYear, selectedMonth) }, (_, i) => i + 1).map((day) => (
+              <ScrollView style={styles.picker} showsVerticalScrollIndicator={false} nestedScrollEnabled>
+                {days.map((day) => (
                   <TouchableOpacity
                     key={day}
                     style={[
@@ -88,48 +122,17 @@ export function PeriodDatePicker({ visible, onClose, onDateSelect }: PeriodDateP
                     </Text>
                   </TouchableOpacity>
                 ))}
-              </View>
-            </View>
-
-            <View style={styles.pickerColumn}>
-              <Text style={[styles.pickerLabel, { color: colors.mutedForeground }]}>Year</Text>
-              <View style={styles.picker}>
-                {years.map((year) => (
-                  <TouchableOpacity
-                    key={year}
-                    style={[
-                      styles.pickerItem,
-                      selectedYear === year && { backgroundColor: colors.primary }
-                    ]}
-                    onPress={() => setSelectedYear(year)}
-                  >
-                    <Text style={[
-                      styles.pickerText,
-                      { color: selectedYear === year ? colors.primaryForeground : colors.foreground }
-                    ]}>
-                      {year}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              </ScrollView>
             </View>
           </View>
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity
-              style={[styles.button, styles.cancelButton, { borderColor: colors.border }]}
-              onPress={onClose}
-            >
-              <Text style={[styles.cancelButtonText, { color: colors.foreground }]}>
-                Cancel
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
               style={[styles.button, styles.confirmButton, { backgroundColor: colors.primary }]}
               onPress={handleConfirm}
             >
               <Text style={[styles.confirmButtonText, { color: colors.primaryForeground }]}>
-                Confirm
+                {getButtonText()}
               </Text>
             </TouchableOpacity>
           </View>
@@ -164,11 +167,10 @@ const styles = StyleSheet.create({
   },
   pickerContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 12,
     marginBottom: 24,
   },
   pickerColumn: {
-    flex: 1,
     alignItems: 'center',
   },
   pickerLabel: {
@@ -178,12 +180,13 @@ const styles = StyleSheet.create({
   },
   picker: {
     maxHeight: 150,
+    width: '100%',
   },
   pickerItem: {
     padding: 8,
     borderRadius: 8,
     marginVertical: 2,
-    minWidth: 50,
+    width: '100%',
     alignItems: 'center',
   },
   pickerText: {

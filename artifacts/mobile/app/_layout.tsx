@@ -9,7 +9,6 @@ import { Feather } from "@expo/vector-icons";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { router, Tabs } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { isLiquidGlassAvailable } from "expo-glass-effect";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef } from "react";
@@ -25,6 +24,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { TabIcon } from "@/components/TabIcon";
 import { CycleProvider, useCycle } from "@/context/CycleContext";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { UserProvider, useUser } from "@/context/UserContext";
@@ -81,30 +81,41 @@ function LoadingScreen() {
 
 function AppTabs() {
   const colors = useColors();
+  const { isDark } = useTheme();
   const isIOS = Platform.OS === "ios";
   const isWeb = Platform.OS === "web";
 
+  // Unified glass tab bar for all platforms
   const tabBarStyle = {
     position: "absolute" as const,
-    backgroundColor: colors.background,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    elevation: 8,
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: -2 },
+    backgroundColor: "transparent",
+    borderTopWidth: 0,
+    elevation: 0,
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    shadowOffset: { width: 0, height: 0 },
     ...(isWeb ? { height: 84 } : {}),
   };
 
   const tabBarBackground = () => (
-    <View style={[StyleSheet.absoluteFill, {
-      backgroundColor: colors.background,
-      borderTopColor: colors.border,
-      borderTopWidth: 1,
-    }]} />
+    <View
+      style={[
+        StyleSheet.absoluteFill,
+        {
+          backgroundColor: isDark
+            ? "rgba(30, 30, 30, 0.75)"
+            : "rgba(255, 255, 255, 0.75)",
+          backdropFilter: "blur(20px)",
+          borderTopWidth: 0.5,
+          borderTopColor: isDark
+            ? "rgba(255, 255, 255, 0.1)"
+            : "rgba(0, 0, 0, 0.1)",
+        },
+      ]}
+    />
   );
 
-  return (
+  const tabsContent = (
     <Tabs
       screenOptions={{
         headerShown: false,
@@ -114,6 +125,7 @@ function AppTabs() {
         tabBarBackground,
         tabBarHideOnKeyboard: false,
         tabBarAllowFontScaling: false,
+                sceneStyle: { backgroundColor: colors.background },
       }}
     >
       {/* Hidden screens — no tab item */}
@@ -125,49 +137,41 @@ function AppTabs() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color }) => isIOS
-            ? <SymbolView name="heart" tintColor={color} size={24} />
-            : <Feather name="heart" size={22} color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon name="heart" color={color} />,
         }}
       />
       <Tabs.Screen
         name="calendar"
         options={{
           title: "Calendar",
-          tabBarIcon: ({ color }) => isIOS
-            ? <SymbolView name="calendar" tintColor={color} size={24} />
-            : <Feather name="calendar" size={22} color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon name="calendar" color={color} />,
         }}
       />
       <Tabs.Screen
         name="log"
         options={{
           title: "Log",
-          tabBarIcon: ({ color }) => isIOS
-            ? <SymbolView name="plus.circle" tintColor={color} size={24} />
-            : <Feather name="plus-circle" size={22} color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon name="log" color={color} />,
         }}
       />
       <Tabs.Screen
         name="insights"
         options={{
           title: "Insights",
-          tabBarIcon: ({ color }) => isIOS
-            ? <SymbolView name="chart.bar" tintColor={color} size={24} />
-            : <Feather name="bar-chart-2" size={22} color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon name="insights" color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color }) => isIOS
-            ? <SymbolView name="person" tintColor={color} size={24} />
-            : <Feather name="user" size={22} color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon name="user" color={color} />,
         }}
       />
     </Tabs>
   );
+
+  return tabsContent;
 }
 
 // ── Auth + loading guard ──────────────────────────────────────────────────────
@@ -196,7 +200,8 @@ function AppShell() {
 
 // ── Root layout ───────────────────────────────────────────────────────────────
 
-export default function RootLayout() {
+function RootLayoutInner() {
+  const { isDark } = useTheme();
   const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -210,21 +215,31 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, fontError]);
 
+  
   if (!fontsLoaded && !fontError) return null;
 
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <KeyboardProvider
+        statusBarTranslucent={true}
+        navigationBarTranslucent={false}
+      >
+        <CycleProvider>
+          <AppShell />
+        </CycleProvider>
+      </KeyboardProvider>
+    </GestureHandlerRootView>
+  );
+}
+
+export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
         <ErrorBoundary>
           <UserProvider>
             <QueryClientProvider client={queryClient}>
-              <GestureHandlerRootView style={{ flex: 1 }}>
-                <KeyboardProvider>
-                  <CycleProvider>
-                    <AppShell />
-                  </CycleProvider>
-                </KeyboardProvider>
-              </GestureHandlerRootView>
+              <RootLayoutInner />
             </QueryClientProvider>
           </UserProvider>
         </ErrorBoundary>

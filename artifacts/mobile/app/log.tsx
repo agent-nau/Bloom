@@ -1,7 +1,8 @@
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
+  Animated,
   Platform,
   ScrollView,
   StyleSheet,
@@ -48,12 +49,22 @@ export default function LogScreen() {
   const [symptoms, setSymptoms] = useState<string[]>(todayLog?.symptoms ?? []);
   const [mood, setMood] = useState<string | undefined>(todayLog?.mood);
   const [saved, setSaved] = useState(false);
+  
+  // Animated values for toggle switches
+  const periodToggleAnim = useRef(new Animated.Value(periodOn ? 1 : 0)).current;
 
   useEffect(() => {
     setPeriodOn(isInPeriod);
     setFlow(todayLog?.flow);
     setSymptoms(todayLog?.symptoms ?? []);
     setMood(todayLog?.mood);
+    
+    // Animate toggle when period state changes
+    Animated.timing(periodToggleAnim, {
+      toValue: isInPeriod ? 1 : 0,
+      duration: 250,
+      useNativeDriver: false,
+    }).start();
   }, [isInPeriod, todayLog]);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
