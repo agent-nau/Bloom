@@ -55,6 +55,7 @@ interface CycleContextType {
   startPeriodOnDate: (dateStr: string) => Promise<void>;
   updatePeriodStartDate: (oldStartDate: string, newStartDate: string) => Promise<void>;
   endPeriod: () => Promise<void>;
+  endPeriodOnDate: (dateStr: string) => Promise<void>;
   saveDayLog: (log: Partial<DayLog> & { date?: string }) => Promise<void>;
   updateSettings: (s: Partial<CycleSettings>) => Promise<void>;
   clearAllData: () => Promise<void>;
@@ -312,6 +313,16 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
     });
   }, [lastCycle, todayStr]);
 
+  const endPeriodOnDate = useCallback(async (dateStr: string) => {
+    if (!lastCycle) return;
+    setCycles((prev) => {
+      const updated = [...prev];
+      const idx = updated.findIndex((c) => c.id === lastCycle.id);
+      if (idx >= 0) updated[idx] = { ...updated[idx], endDate: dateStr };
+      return updated;
+    });
+  }, [lastCycle]);
+
   const saveDayLog = useCallback(async (log: Partial<DayLog> & { date?: string }) => {
     const date = log.date ?? todayStr;
     setLogs((prev) => {
@@ -387,6 +398,7 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
     startPeriodOnDate,
     updatePeriodStartDate,
     endPeriod,
+    endPeriodOnDate,
     saveDayLog,
     updateSettings,
     clearAllData,

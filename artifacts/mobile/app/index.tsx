@@ -19,6 +19,7 @@ export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const {
     currentCycleDay,
     phaseName,
@@ -39,6 +40,7 @@ export default function HomeScreen() {
     startPeriodOnDate,
     updatePeriodStartDate,
     endPeriod,
+    endPeriodOnDate,
     todayLog,
     todayStr,
   } = useCycle();
@@ -163,12 +165,12 @@ export default function HomeScreen() {
         ) : (
           <TouchableOpacity
             style={[styles.actionBtn, { backgroundColor: colors.secondary, borderWidth: 1, borderColor: colors.border }]}
-            onPress={handleEndPeriod}
+            onPress={() => setShowEndDatePicker(true)}
             activeOpacity={0.82}
           >
             <Feather name="check-circle" size={18} color={colors.primary} />
             <Text style={[styles.actionBtnText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
-              Ended Today
+              Select End Date
             </Text>
           </TouchableOpacity>
         )}
@@ -292,6 +294,16 @@ export default function HomeScreen() {
         visible={showDatePicker}
         onClose={() => setShowDatePicker(false)}
         onDateSelect={handleStartPeriodOnDate}
+      />
+      <PeriodDatePicker
+        visible={showEndDatePicker}
+        onClose={() => setShowEndDatePicker(false)}
+        onDateSelect={async (dateStr) => {
+          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          await endPeriodOnDate(dateStr);
+        }}
+        title="When did your period end?"
+        confirmLabel={(month, day) => `Ended ${month} ${day}`}
       />
     </View>
   );

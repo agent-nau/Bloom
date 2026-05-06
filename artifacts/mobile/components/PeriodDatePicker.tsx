@@ -6,6 +6,8 @@ interface PeriodDatePickerProps {
   visible: boolean;
   onClose: () => void;
   onDateSelect: (date: string) => void;
+  title?: string;
+  confirmLabel?: (month: string, day: number) => string;
 }
 
 const MONTH_NAMES = [
@@ -25,7 +27,7 @@ function getAvailableMonths() {
   ];
 }
 
-export function PeriodDatePicker({ visible, onClose, onDateSelect }: PeriodDatePickerProps) {
+export function PeriodDatePicker({ visible, onClose, onDateSelect, title = "When did your period start?", confirmLabel }: PeriodDatePickerProps) {
   const colors = useColors();
   const availableMonths = getAvailableMonths();
 
@@ -62,6 +64,7 @@ export function PeriodDatePicker({ visible, onClose, onDateSelect }: PeriodDateP
     if (!selectedDay || !month || !year) {
       return "Select Date";
     }
+    if (confirmLabel) return confirmLabel(MONTH_NAMES[month], selectedDay);
     return `Started ${MONTH_NAMES[month]} ${selectedDay}`;
   };
 
@@ -75,7 +78,7 @@ export function PeriodDatePicker({ visible, onClose, onDateSelect }: PeriodDateP
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable style={[styles.container, { backgroundColor: colors.card }]} onPress={(e) => e.stopPropagation()}>
           <Text style={[styles.title, { color: colors.foreground }]}>
-            When did your period start?
+            {title}
           </Text>
 
           <View style={styles.pickerContainer}>
