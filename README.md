@@ -12,31 +12,31 @@
 
 ---
 
-## ✨ About Bloom
+## About Bloom
 
 Bloom is your personal cycle companion designed to help you feel more in tune with your body. Whether you're managing period health, planning around your cycle, or simply want to understand your patterns better, Bloom keeps everything in one calm, easy-to-use place.
 
-## 🚀 Features
+## Features
 
-### 🏠 **Home Screen**
+### **Home Screen**
 - **Current cycle day & phase** at a glance — Period, Follicular, Fertile Window, Ovulation, or Luteal
 - **Visual progress bar** showing where you are in your cycle
 - **Plain-language descriptions** of what your body is doing
 - **Countdown cards** for your next period date, fertile window, and ovulation prediction
 
-### 📅 **Calendar View**
+### **Calendar View**
 A beautiful color-coded monthly calendar makes your cycle visual and intuitive:
 
 | Color | Meaning |
 |-------|---------|
-| 🌹 **Rose** | Logged period days |
-| 🌿 **Sage green** | Fertile window |
-| ⭕ **Outlined rose** | Predicted upcoming period |
-| 🌲 **Darker green** | Ovulation day |
+| **Rose** | Logged period days |
+| **Sage green** | Fertile window |
+| **Outlined rose** | Predicted upcoming period |
+| **Darker green** | Ovulation day |
 
 *Tap any day to see detailed logged information.*
 
-### 📝 **Quick Logging**
+### **Quick Logging**
 Record your day in seconds with intuitive controls:
 
 - **Period toggle** - simple on/off logging
@@ -44,16 +44,16 @@ Record your day in seconds with intuitive controls:
 - **Mood tracking** - Amazing, Good, Okay, Low, Rough
 - **12 common symptoms** - Cramps, Headache, Bloating, Fatigue, and more
 
-### 📊 **Personal Insights**
+### **Personal Insights**
 After tracking a few cycles, Bloom reveals your unique patterns:
 
-- 📈 Average cycle and period length
-- 📊 Shortest and longest cycles
-- 🔍 Most common symptoms
-- 😊 Mood breakdown analysis
-- 📚 Full cycle history
+- Average cycle and period length
+- Shortest and longest cycles
+- Most common symptoms
+- Mood breakdown analysis
+- Full cycle history
 
-## 🔒 Privacy First
+## Privacy First
 
 <div align="center">
 
@@ -61,11 +61,11 @@ After tracking a few cycles, Bloom reveals your unique patterns:
 
 </div>
 
-- ✅ **Local storage only** - All data stored on your device
-- 🚫 **No accounts required** - Start tracking immediately
-- ☁️ **No cloud sync** - Your data never leaves your phone
-- 🚫 **No ads** - Focus on what matters: your health
-- 🛡️ **No tracking** - Complete privacy protection
+- **Local storage only** - All data stored on your device
+- **No accounts required** - Start tracking immediately
+- **No cloud sync** - Your data never leaves your phone
+- **No ads** - Focus on what matters: your health
+- **No tracking** - Complete privacy protection
 
 ---
 
